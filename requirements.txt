@@ -1,0 +1,14 @@
+# Selenium / автотесты
+selenium
+pytest
+allure-pytest
+
+# Telegram-бот
+python-telegram-bot
+fastapi
+uvicorn
+python-dotenv
+
+# Аналитика затрат
+pandas
+matplotlib

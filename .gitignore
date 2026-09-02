@@ -1,0 +1,24 @@
+# секреты
+.env
+
+# драйверы браузера (платформозависимые бинарники — не хранятся в репозитории)
+*.exe
+chromedriver*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# артефакты тестов
+logs/
+screenshots/
+allure-results/
+allure-report/
+.pytest_cache/
+
+# прочее
+.DS_Store
+*.png
+!docs/*.png

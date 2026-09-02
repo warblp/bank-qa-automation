@@ -1,0 +1,80 @@
+stages:
+  - test
+  - report
+  - notify
+  - pages
+
+# Сервис для запуска Selenium в контейнере
+services:
+  - name: selenium/standalone-chrome
+    alias: selenium
+
+variables:
+  ALLURE_VERSION: "2.27.0"
+  ALLURE_RESULTS_DIR: "allure-results"
+  ALLURE_REPORT_DIR: "allure-report"
+  # TG_BOT_TOKEN и TG_CHAT_ID НЕ хранятся здесь.
+  # Задай их в GitLab: Settings → CI/CD → Variables (обязательно "Masked")
+
+# Запуск автотестов
+pytest:
+  image: python:3.11
+  stage: test
+  before_script:
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - mkdir -p $ALLURE_RESULTS_DIR
+    - pytest tests/ --alluredir=$ALLURE_RESULTS_DIR
+  artifacts:
+    paths:
+      - $ALLURE_RESULTS_DIR
+      - logs/
+      - screenshots/
+    expire_in: 1 week
+
+# Генерация Allure-отчёта
+allure_report:
+  image: openjdk:11
+  stage: report
+  dependencies:
+    - pytest
+  script:
+    - apt-get update && apt-get install -y wget unzip
+    - wget https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.zip
+    - unzip allure-${ALLURE_VERSION}.zip -d allure-cli
+    - ./allure-cli/allure-${ALLURE_VERSION}/bin/allure generate $ALLURE_RESULTS_DIR -o $ALLURE_REPORT_DIR --clean
+  artifacts:
+    paths:
+      - $ALLURE_REPORT_DIR
+    expire_in: 1 week
+
+# Уведомление в Telegram о результате пайплайна
+notify_telegram:
+  image: curlimages/curl:latest
+  stage: notify
+  needs:
+    - job: pytest
+      artifacts: false
+  script:
+    - >
+      STATUS=$(if [ "$CI_JOB_STATUS" == "success" ]; then echo "✅ Тесты прошли"; else echo "❌ Тесты упали"; fi)
+    - >
+      curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage"
+      -d chat_id="${TG_CHAT_ID}"
+      -d text="🧪 *Pipeline:* [${CI_PROJECT_NAME}]%0A📄 *Тесты:* ${STATUS}%0A🔗 [Открыть Pipeline](${CI_PIPELINE_URL})"
+      -d parse_mode=Markdown
+  when: always
+  only:
+    - main
+
+# Публикация Allure-отчёта на GitLab Pages
+pages:
+  stage: pages
+  script:
+    - mv $ALLURE_REPORT_DIR public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

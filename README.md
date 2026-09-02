@@ -54,12 +54,12 @@ python cost-analysis/visualization.py
 
 ```bash
 cp .env.example .env
-# впиши свой TG\_BOT\_TOKEN и TG\_CHAT\_ID в .env
+# токен TG_BOT_TOKEN и TG_CHAT_ID в .env
 python telegram-bot/bot.py
 ```
 
 Токены **не хранятся в коде** — берутся из переменных окружения. Для CI то же самое:
-`TG\_BOT\_TOKEN` и `TG\_CHAT\_ID` задаются в GitLab → Settings → CI/CD → Variables (Masked).
+`TG_BOT_TOKEN` и `TG_CHAT_ID` задаются в GitLab → Settings → CI/CD → Variables (Masked).
 
 ## Результаты (из ВКР)
 
